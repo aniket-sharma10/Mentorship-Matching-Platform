@@ -9,9 +9,9 @@ const auth = async (req, res, next) => {
 
     try {
         const payload = jwt.verify(token, process.env.JWT_SECRET)
-        req.user = { userId: payload.userId}
+        req.user = { id: payload.userId}
         next()
-    } catch (error) {
+    } catch (error) { 
         throw new UnauthenticatedError('Please log in to continue!')
     }
 }

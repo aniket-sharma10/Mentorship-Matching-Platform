@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import connectDB from './db/connect.js';  // Prisma MySQL connection
+import 'express-async-errors'
 
 // Middleware imports
 import errorHandlerMiddleware from './middlewares/error-handler.js';
@@ -11,13 +12,19 @@ import notFound from './middlewares/not-found.js';
 
 const app = express();
 
+// router imports
+import authRoute from './routes/auth-route.js'
+import profileRoute from './routes/profile-route.js'
+
 dotenv.config();
 // Middleware setup
 app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
 
-// API routes
+// using routes
+app.use('/api/auth', authRoute)
+app.use('/api/profile', profileRoute)
 
 
 // Error handling middlewares

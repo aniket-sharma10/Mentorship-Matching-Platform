@@ -24,13 +24,12 @@ const errorHandlerMiddleware = (err, req, res, next) => {
       customError.msg = `Foreign key constraint failed`;
       customError.statusCode = StatusCodes.BAD_REQUEST;
     }
-    // Add other Prisma errors if needed
+    
   }
 
-  // Handle any other unexpected errors (e.g., runtime errors)
-  if (!(err instanceof Prisma.PrismaClientKnownRequestError)) {
-    customError.msg = 'An unexpected error occurred';
-    customError.statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
+  if (err.statusCode && err.message) {
+    customError.msg = err.message;
+    customError.statusCode = err.statusCode;
   }
 
   return res.status(customError.statusCode).json({ msg: customError.msg });
