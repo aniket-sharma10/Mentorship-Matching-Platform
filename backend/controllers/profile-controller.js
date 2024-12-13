@@ -1,7 +1,9 @@
-// profile-controller.js
 import { StatusCodes } from "http-status-codes";
-import prisma from "../prisma/prisma-client.js";
-import bcrypt from "bcrypt";
+import { PrismaClient } from '@prisma/client';
+import bcrypt from "bcryptjs";
+import { BadRequestError, NotFoundError } from "../errors/index.js";
+
+const prisma = new PrismaClient();
 
 // Get Profile
 export const getProfile = async (req, res) => {
@@ -24,9 +26,7 @@ export const getProfile = async (req, res) => {
   });
 
   if (!profile) {
-    return res
-      .status(StatusCodes.NOT_FOUND)
-      .json({ msg: "Profile not found." });
+    throw new NotFoundError("Profile not found.");
   }
 
   res.status(StatusCodes.OK).json(profile);
@@ -43,9 +43,7 @@ export const createProfile = async (req, res) => {
   });
 
   if (existingProfile) {
-    return res
-      .status(StatusCodes.BAD_REQUEST)
-      .json({ msg: "Profile already exists. Please update it instead." });
+    throw new BadRequestError("Profile already exists. Please update it instead.");
   }
 
   // default profile avatarUrl
