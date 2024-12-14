@@ -15,6 +15,9 @@ const app = express();
 // router imports
 import authRoute from './routes/auth-route.js'
 import profileRoute from './routes/profile-route.js'
+import connectionRoute from './routes/connection-route.js'
+import discoveryRoute from './routes/discovery-route.js'
+import matchmakingRoute from './routes/matchmaking-route.js'
 
 dotenv.config();
 // Middleware setup
@@ -25,6 +28,9 @@ app.use(cookieParser());
 // using routes
 app.use('/api/auth', authRoute)
 app.use('/api/profile', profileRoute)
+app.use('/api/connection', connectionRoute)
+app.use('/api/discovery', discoveryRoute)
+app.use('/api/matchmaking', matchmakingRoute)
 
 
 // Error handling middlewares

@@ -29,7 +29,7 @@ export const sendRequest = async (req, res) => {
     throw new BadRequestError("Mentors can only connect with mentees and vice versa.");
   }
 
-  // assigning mentorId and menteeId dynamically based on roles
+  // Assigning mentorId and menteeId dynamically based on roles
   let mentorId, menteeId;
   if (currentUser.role === "MENTOR" && requestedUser.role === "MENTEE") {
     mentorId = currentUserId;
@@ -64,6 +64,13 @@ export const sendRequest = async (req, res) => {
     },
   });
 
+  await prisma.notification.create({
+    data: {
+      userId: requestedUserId,
+      type: "CONNECTION_REQUEST",
+    },
+  });
+
   res.status(StatusCodes.CREATED).json(connection);
 };
 
@@ -93,6 +100,14 @@ export const acceptRequest = async (req, res) => {
     data: { status: "ACCEPTED" },
   });
 
+  const otherUserId = connection.mentorId === userId ? connection.menteeId : connection.mentorId;
+  await prisma.notification.create({
+    data: {
+      userId: otherUserId,
+      type: "CONNECTION_ACCEPTED",
+    },
+  });
+
   res.status(StatusCodes.OK).json(updatedConnection);
 };
 
@@ -101,7 +116,6 @@ export const declineRequest = async (req, res) => {
   const userId = req.user.id;
   const { connectionId } = req.body;
 
-  // Find the connection
   const connection = await prisma.connection.findUnique({
     where: { id: connectionId },
   });
@@ -110,20 +124,25 @@ export const declineRequest = async (req, res) => {
     throw new NotFoundError("Connection request not found.");
   }
 
-  // Validate that the current user is involved in the connection
   if (![connection.mentorId, connection.menteeId].includes(userId)) {
     throw new BadRequestError("You are not authorized to decline this connection request.");
   }
 
-  // Ensure the status is PENDING
   if (connection.status !== "PENDING") {
     throw new BadRequestError("This connection request cannot be declined.");
   }
 
-  // Update the connection status to DECLINED
   const updatedConnection = await prisma.connection.update({
     where: { id: connection.id },
     data: { status: "DECLINED" },
+  });
+
+  const otherUserId = connection.mentorId === userId ? connection.menteeId : connection.mentorId;
+  await prisma.notification.create({
+    data: {
+      userId: otherUserId,
+      type: "CONNECTION_DECLINED",
+    },
   });
 
   res.status(StatusCodes.OK).json(updatedConnection);
@@ -133,7 +152,6 @@ export const declineRequest = async (req, res) => {
 export const getConnections = async (req, res) => {
   const userId = req.user.id;
 
-  // Get all connections (both mentor and mentee relationships)
   const connections = await prisma.connection.findMany({
     where: {
       OR: [
@@ -154,7 +172,6 @@ export const getConnections = async (req, res) => {
 export const getPending = async (req, res) => {
   const userId = req.user.id;
 
-  // Get all pending connection requests where the user is either a mentor or mentee
   const pendingRequests = await prisma.connection.findMany({
     where: {
       OR: [
@@ -176,7 +193,6 @@ export const deleteConnection = async (req, res) => {
   const userId = req.user.id;
   const { connectionId } = req.params;
 
-  // Find the connection
   const connection = await prisma.connection.findUnique({
     where: { id: parseInt(connectionId) },
   });
@@ -185,12 +201,10 @@ export const deleteConnection = async (req, res) => {
     throw new NotFoundError("Connection not found.");
   }
 
-  // Ensure the current user is involved in the connection
   if (![connection.mentorId, connection.menteeId].includes(userId)) {
     throw new BadRequestError("You are not authorized to delete this connection.");
   }
 
-  // Delete the connection
   await prisma.connection.delete({
     where: { id: parseInt(connectionId) },
   });
