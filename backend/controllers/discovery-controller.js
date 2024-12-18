@@ -20,32 +20,32 @@ export const discoverUsers = async (req, res) => {
     },
   };
 
-  if (role) {
+  if (role && role !== " ") {
     filterConditions.role = role;
   }
 
-  // filtering by skills
+  // Filter skills
   if (skills) {
     filterConditions.profile.skills = {
       some: {
         skill: {
           name: {
             contains: skills,
-            mode: 'insensitive',
+            // mode: 'insensitive',
           },
         },
       },
     };
   }
 
-  // filtering by interests
+  // Filter interests
   if (interests) {
     filterConditions.profile.interests = {
       some: {
         interest: {
           name: {
             contains: interests,
-            mode: 'insensitive',
+            // mode: 'insensitive',
           },
         },
       },
