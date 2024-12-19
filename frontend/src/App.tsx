@@ -8,6 +8,7 @@ import SignIn from "./Pages/SignIn";
 import PrivateRoute from "./common/PrivateRoute";
 import ProfilePage from "./Pages/Profile";
 import Discovery from "./Pages/Discovery";
+import Matchmaking from "./Pages/Matchmaking";
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
         <Route element={<PrivateRoute />}>
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/discovery" element={<Discovery />} />
+        <Route path="/matchmaking" element={<Matchmaking />} />
         </Route>
       </Routes>
       <Footer />

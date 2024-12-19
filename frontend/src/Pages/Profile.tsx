@@ -28,7 +28,7 @@ const Profile = () => {
   const { currentUser } = useSelector((state: RootState) => state.user);
   const [profile, setProfile] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(false); 
+  const [loading, setLoading] = useState(false);
   const [name, setName] = useState<string>("");
   const [bio, setBio] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -48,7 +48,7 @@ const Profile = () => {
 
   // Fetching profile data
   const fetchProfile = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       const response = await fetch("/api/profile");
       const data = await response.json();
@@ -76,14 +76,14 @@ const Profile = () => {
       }
     } catch (error) {
       toast.error("Error fetching profile");
-    }finally {
+    } finally {
       setLoading(false);
     }
   };
 
   // updating profile
   const handleProfileUpdate = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       const res = await fetch("/api/profile", {
         method: "PUT",
@@ -110,7 +110,7 @@ const Profile = () => {
       }
     } catch (error) {
       toast.error("Error updating profile");
-    }finally {
+    } finally {
       setLoading(false);
     }
   };
@@ -312,15 +312,20 @@ const Profile = () => {
       ) : (
         <div className="mt-4 px-4">
           <p className="mt-2">
+            <strong>Bio:</strong> {bio || "No bio available."}
+          </p>
+          <p className="mt-2">
             <strong>Role:</strong> {role === "MENTOR" ? "Mentor" : "Mentee"}
           </p>
-          <p>{bio || "No bio available."}</p>
           <div className="mt-4">
             <h3 className="font-semibold">Skills:</h3>
             {skills.length > 0 ? (
               <div className="mt-2 flex flex-wrap gap-2">
                 {skills.map((skill, index) => (
-                  <Badge key={index} className="text-teal-500 bg-teal-100 text-base gap-2 cursor-pointer">
+                  <Badge
+                    key={index}
+                    className="text-teal-500 bg-teal-100 text-base gap-2 cursor-pointer"
+                  >
                     {skill.name}
                   </Badge>
                 ))}
@@ -334,7 +339,10 @@ const Profile = () => {
             {interests.length > 0 ? (
               <div className="mt-2 flex flex-wrap gap-2">
                 {interests.map((interest, index) => (
-                  <Badge key={index} className="text-teal-500 bg-teal-100 text-base gap-2 cursor-pointer">
+                  <Badge
+                    key={index}
+                    className="text-teal-500 bg-teal-100 text-base gap-2 cursor-pointer"
+                  >
                     {interest.name}
                   </Badge>
                 ))}

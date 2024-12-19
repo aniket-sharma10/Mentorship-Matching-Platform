@@ -1,40 +1,25 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "react-toastify";
 import { Spinner } from "flowbite-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import debounce from "lodash/debounce";
+import { Badge } from "@/components/ui/badge";
 
 type User = {
-  id: number;
-  email: string;
-  role: "MENTOR" | "MENTEE";
-  profile: {
-    name: string;
-    bio: string;
-    avatarUrl?: string;
-    skills: string[];
-    interests: string[];
+  user: {
+    id: number;
+    email: string;
+    role: "MENTOR" | "MENTEE";
   };
-};
-
-type Pagination = {
-  totalUsers: number;
-  totalPages: number;
-  currentPage: number;
-  perPage: number;
+  name: string;
+  bio: string;
+  avatarUrl?: string;
+  skills: Array<{ skill: { name: string } }>;
+  interests: Array<{ interest: { name: string } }>;
+  score: number;
 };
 
 type ConnectionStatusType = {
@@ -43,99 +28,41 @@ type ConnectionStatusType = {
   connectionId?: number;
 };
 
-function Discovery() {
+function Matchmaking() {
   const { currentUser } = useSelector((state: RootState) => state.user);
-  const [users, setUsers] = useState<User[]>([]);
+  const [matches, setMatches] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
-  const [pagination, setPagination] = useState<Pagination>({
-    totalUsers: 0,
-    totalPages: 0,
-    currentPage: 1,
-    perPage: 10,
-  });
-
-  // Filter states
-  const [roleFilter, setRoleFilter] = useState<"MENTOR" | "MENTEE" | "">("");
-  const [skillsFilter, setSkillsFilter] = useState<string>("");
-  const [interestsFilter, setInterestsFilter] = useState<string>("");
-
   const [connectionStatuses, setConnectionStatuses] = useState<
     Record<number, ConnectionStatusType>
   >({});
 
-  // Debounced fetch function
-  const debouncedFetchUsers = useCallback(
-    debounce((role, skills, interests, page) => {
-      fetchDiscoveryUsers(role, skills, interests, page);
-    }, 500),
-    []
-  );
-
-  // Watchers for filter changes
   useEffect(() => {
     if (currentUser) {
-      if (skillsFilter || interestsFilter) {
-        debouncedFetchUsers(
-          roleFilter,
-          skillsFilter,
-          interestsFilter,
-          pagination.currentPage
-        );
-      } else {
-        // immediate fetch for role filter or when filters are cleared
-        fetchDiscoveryUsers(
-          roleFilter,
-          skillsFilter,
-          interestsFilter,
-          pagination.currentPage
-        );
-      }
+      fetchMatches();
     }
-  }, [
-    currentUser,
-    roleFilter,
-    skillsFilter,
-    interestsFilter,
-    pagination.currentPage,
-  ]);
+  }, [currentUser]);
 
   useEffect(() => {
-    if (currentUser && users.length > 0) {
-      users.forEach((user) => {
-        fetchConnectionStatus(user.id);
+    if (currentUser && matches.length > 0) {
+      matches.forEach((match) => {
+        fetchConnectionStatus(match.user.id);
       });
     }
-  }, [currentUser, users]);
+  }, [currentUser, matches]);
 
-  // fetching users with filters
-  const fetchDiscoveryUsers = async (
-    role: string,
-    skills: string,
-    interests: string,
-    page: number
-  ) => {
+  const fetchMatches = async () => {
     setLoading(true);
     try {
-      const queryParams = new URLSearchParams({
-        page: page.toString(),
-        limit: pagination.perPage.toString(),
-        ...(role && role !== " " && { role }),
-        ...(skills && { skills }),
-        ...(interests && { interests }),
-      });
-
-      const response = await fetch(`/api/discovery?${queryParams}`);
+      const response = await fetch("/api/matchmaking");
       const data = await response.json();
 
-      if (data.users) {
-        const filteredUsers = data.users.filter(
-          (user: User) => user.id !== Number(currentUser?.id)
-        );
-        setUsers(filteredUsers);
-        setPagination(data.pagination);
+      if (Array.isArray(data)) {
+        setMatches(data);
+      } else if (data.message) {
+        toast.info(data.message);
       }
     } catch (error) {
-      toast.error("Error fetching discovery users");
+      toast.error("Error fetching matches");
     } finally {
       setLoading(false);
     }
@@ -158,15 +85,6 @@ function Discovery() {
       }));
     } catch (error) {
       console.error("Error fetching connection status:", error);
-    }
-  };
-
-  // Handle filter change
-  const handleFilterChange = (filterType: string, value: string) => {
-    if (filterType === "skills") {
-      setSkillsFilter(value);
-    } else if (filterType === "interests") {
-      setInterestsFilter(value);
     }
   };
 
@@ -254,13 +172,6 @@ function Discovery() {
     }
   };
 
-  const resetFilters = () => {
-    setRoleFilter("");
-    setSkillsFilter("");
-    setInterestsFilter("");
-    setPagination((prev) => ({ ...prev, currentPage: 1 }));
-  };
-
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -272,88 +183,43 @@ function Discovery() {
 
   return (
     <div className="lg:px-36 lg:py-20 px-4 py-2 sm:px-12 sm:py-6 min-h-screen">
-      <h1 className="text-2xl font-bold mb-6">Discover Mentors and Mentees</h1>
-
-      {/* Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div>
-          <label className="block text-sm font-medium mb-2">Role</label>
-          <Select
-            value={roleFilter || ""}
-            onValueChange={(value: "MENTOR" | "MENTEE" | "") => {
-              setRoleFilter(value === "" ? "" : (value as "MENTOR" | "MENTEE"));
-            }}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select Role" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value=" ">All Roles</SelectItem>
-              <SelectItem value="MENTOR">Mentors</SelectItem>
-              <SelectItem value="MENTEE">Mentees</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-2">Skills</label>
-          <Input
-            placeholder="Filter by skills"
-            value={skillsFilter}
-            onChange={(e) => handleFilterChange("skills", e.target.value)}
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-2">Interests</label>
-          <Input
-            placeholder="Filter by interests"
-            value={interestsFilter}
-            onChange={(e) => handleFilterChange("interests", e.target.value)}
-          />
-        </div>
-      </div>
-
-      <div className="flex justify-end mb-4">
-        <Button variant="outline" onClick={resetFilters}>
-          Reset Filters
-        </Button>
-      </div>
+      <h1 className="text-2xl font-bold mb-2">Smart Matches</h1>
+      <p className="text-gray-600 mb-6">
+        Recommended users based on your skills and interests
+      </p>
 
       {/* User Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
-        {users.map((user) => (
-          <Card key={user.id} className="relative group">
+        {matches.map((match) => (
+          <Card key={match.user.id} className="relative group">
             <CardContent className="p-6">
               <div className="flex items-start space-x-4 mb-4">
                 <Avatar className="w-16 h-16 flex-shrink-0">
                   <AvatarImage
-                    src={user.profile.avatarUrl}
-                    alt={user.profile.name || "User Avatar"}
+                    src={match.avatarUrl}
+                    alt={match.name || "User Avatar"}
                   />
-                  <AvatarFallback>
-                    {user.profile.name?.[0] || "U"}
-                  </AvatarFallback>
+                  <AvatarFallback>{match.name?.[0] || "U"}</AvatarFallback>
                 </Avatar>
                 <div className="flex-grow min-w-0">
                   <h3 className="text-lg font-semibold truncate pr-24">
-                    {user.profile.name || "Unnamed User"}
+                    {match.name || "Unnamed User"}
                   </h3>
-                  <p className="text-sm text-gray-500">{user.role}</p>
+                  <p className="text-sm text-gray-500">{match.user.role}</p>
                 </div>
                 {/* Connection Request Button */}
                 <div className="absolute top-6 right-6">
-                  {connectionStatuses[user.id]?.status === "NONE" && (
+                  {connectionStatuses[match.user.id]?.status === "NONE" && (
                     <Button
                       size="sm"
                       className="opacity-0 group-hover:opacity-100 transition-opacity bg-blue-600 hover:bg-blue-500"
-                      onClick={() => sendConnectionRequest(user.id)}
+                      onClick={() => sendConnectionRequest(match.user.id)}
                     >
                       Connect
                     </Button>
                   )}
-                  {connectionStatuses[user.id]?.status === "PENDING" &&
-                    !connectionStatuses[user.id]?.isReceiver && (
+                  {connectionStatuses[match.user.id]?.status === "PENDING" &&
+                    !connectionStatuses[match.user.id]?.isReceiver && (
                       <Button
                         size="sm"
                         className="opacity-0 group-hover:opacity-100 transition-opacity"
@@ -363,16 +229,16 @@ function Discovery() {
                         Requested
                       </Button>
                     )}
-                  {connectionStatuses[user.id]?.status === "PENDING" &&
-                    connectionStatuses[user.id]?.isReceiver && (
+                  {connectionStatuses[match.user.id]?.status === "PENDING" &&
+                    connectionStatuses[match.user.id]?.isReceiver && (
                       <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
                         <Button
                           size="sm"
                           className="bg-green-600 hover:bg-green-500"
                           onClick={() =>
                             handleAcceptRequest(
-                              connectionStatuses[user.id].connectionId!,
-                              user.id
+                              connectionStatuses[match.user.id].connectionId!,
+                              match.user.id
                             )
                           }
                         >
@@ -383,8 +249,8 @@ function Discovery() {
                           variant="destructive"
                           onClick={() =>
                             handleDeclineRequest(
-                              connectionStatuses[user.id].connectionId!,
-                              user.id
+                              connectionStatuses[match.user.id].connectionId!,
+                              match.user.id
                             )
                           }
                         >
@@ -392,7 +258,7 @@ function Discovery() {
                         </Button>
                       </div>
                     )}
-                  {connectionStatuses[user.id]?.status === "CONNECTED" && (
+                  {connectionStatuses[match.user.id]?.status === "CONNECTED" && (
                     <Button
                       size="sm"
                       className="opacity-0 group-hover:opacity-100 transition-opacity"
@@ -402,11 +268,11 @@ function Discovery() {
                       Connected
                     </Button>
                   )}
-                  {connectionStatuses[user.id]?.status === "DECLINED" && (
+                  {connectionStatuses[match.user.id]?.status === "DECLINED" && (
                     <Button
                       size="sm"
                       className="opacity-0 group-hover:opacity-100 transition-opacity bg-blue-600 hover:bg-blue-500"
-                      onClick={() => sendConnectionRequest(user.id)}
+                      onClick={() => sendConnectionRequest(match.user.id)}
                     >
                       Connect
                     </Button>
@@ -415,14 +281,14 @@ function Discovery() {
               </div>
 
               <p className="text-sm text-gray-600 mb-4">
-                {user.profile.bio || "No bio available"}
+                {match.bio || "No bio available"}
               </p>
 
               <div className="mb-4">
                 <h4 className="text-sm font-medium mb-2">Skills</h4>
                 <div className="space-x-2">
-                  {user.profile.skills.map((skill) => (
-                    <Badge key={skill}>{skill}</Badge>
+                  {match.skills.map((skill) => (
+                    <Badge key={skill.skill.name}>{skill.skill.name}</Badge>
                   ))}
                 </div>
               </div>
@@ -430,8 +296,10 @@ function Discovery() {
               <div>
                 <h4 className="text-sm font-medium mb-2">Interests</h4>
                 <div className="space-x-2">
-                  {user.profile.interests.map((interest) => (
-                    <Badge key={interest}>{interest}</Badge>
+                  {match.interests.map((interest) => (
+                    <Badge key={interest.interest.name}>
+                      {interest.interest.name}
+                    </Badge>
                   ))}
                 </div>
               </div>
@@ -439,37 +307,8 @@ function Discovery() {
           </Card>
         ))}
       </div>
-
-      {/* Pagination */}
-      <div className="flex justify-center space-x-4 mt-6">
-        <Button
-          variant="outline"
-          disabled={pagination.currentPage === 1}
-          onClick={() =>
-            setPagination((prev) => ({
-              ...prev,
-              currentPage: prev.currentPage - 1,
-            }))
-          }
-        >
-          Previous
-        </Button>
-        <Button
-          variant="outline"
-          disabled={pagination.currentPage === pagination.totalPages}
-          onClick={() =>
-            setPagination((prev) => ({
-              ...prev,
-              currentPage: prev.currentPage + 1,
-            }))
-          }
-        >
-          Next
-        </Button>
-      </div>
     </div>
   );
-
 }
 
-export default Discovery;
+export default Matchmaking;
