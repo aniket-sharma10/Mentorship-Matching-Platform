@@ -1,15 +1,15 @@
-const flowbite = require("flowbite-react/tailwind");
+// const flowbite = require("flowbite-react/tailwind");
 /** @type {import('tailwindcss').Config} */
 module.exports =  {
 	darkMode: ["class"],
 	content: [
 		"./index.html",
 		"./src/**/*.{js,ts,jsx,tsx}",
-		flowbite.content(),
+		// flowbite.content(),
 	],
-	plugins: [
-		flowbite.plugin(),
-	],
+	// plugins: [
+	// 	flowbite.plugin(),
+	// ],
 	theme: {
 		extend: {
 			borderRadius: {
