@@ -9,6 +9,7 @@ import PrivateRoute from "./common/PrivateRoute";
 import ProfilePage from "./Pages/Profile";
 import Discovery from "./Pages/Discovery";
 import Matchmaking from "./Pages/Matchmaking";
+import Connections from "./Pages/Connections";
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/discovery" element={<Discovery />} />
         <Route path="/matchmaking" element={<Matchmaking />} />
+        <Route path="/connections" element={<Connections />} />
         </Route>
       </Routes>
       <Footer />

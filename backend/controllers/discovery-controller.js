@@ -6,6 +6,7 @@ const prisma = new PrismaClient();
 
 export const discoverUsers = async (req, res) => {
   const { role, skills, interests, page = 1, limit = 10 } = req.query;
+  const loggedInUserId = req.user.id;
 
   const pageNum = parseInt(page, 10);
   const limitNum = parseInt(limit, 10);
@@ -17,6 +18,9 @@ export const discoverUsers = async (req, res) => {
   let filterConditions = {
     profile: {
       isComplete: true,
+    },
+    id: {
+      not: loggedInUserId,
     },
   };
 

@@ -12,8 +12,8 @@ export const getProfile = async (req, res) => {
   const profile = await prisma.profile.findUnique({
     where: { userId },
     include: {
-      user:{
-        select:{
+      user: {
+        select: {
           role: true
         }
       },
@@ -31,10 +31,25 @@ export const getProfile = async (req, res) => {
   });
 
   if (!profile) {
-    throw new NotFoundError("Profile not found.");
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true }
+    });
+
+
+    return res.status(StatusCodes.OK).json({
+      userId,
+      name: "",
+      bio: "",
+      avatarUrl: "https://www.pngall.com/wp-content/uploads/5/Profile-PNG-File.png",
+      isComplete: false,
+      user: { role: user.role },
+      skills: [],
+      interests: []
+    });
   }
 
-  res.status(StatusCodes.OK).json(profile);
+  return res.status(StatusCodes.OK).json(profile);
 };
 
 // Create Profile
@@ -91,7 +106,24 @@ export const updateProfile = async (req, res) => {
   const userId = req.user.id;
   const { name, bio, avatarUrl, skills, interests, password, role } = req.body;
 
-  let updatedData = { name, bio, avatarUrl };
+  // let updatedData = { name, bio, avatarUrl };
+
+  let profile = await prisma.profile.findUnique({
+    where: { userId },
+  });
+
+  // If profile doesn't exist, create it first
+  if (!profile) {
+    profile = await prisma.profile.create({
+      data: {
+        userId,
+        name: name || "",
+        bio: bio || "",
+        avatarUrl: avatarUrl || "https://www.pngall.com/wp-content/uploads/5/Profile-PNG-File.png",
+        isComplete: true,
+      },
+    });
+  }
 
   // updating password if provided
   if (password) {
@@ -111,17 +143,19 @@ export const updateProfile = async (req, res) => {
     });
   }
 
-  const profile = await prisma.profile.findUnique({
+  // update profile
+  await prisma.profile.update({
     where: { userId },
+    data: {
+      name: name || profile.name,
+      bio: bio || profile.bio,
+      avatarUrl: avatarUrl || profile.avatarUrl,
+    },
   });
 
-  const updatedProfile = await prisma.profile.update({
-    where: { userId },
-    data: updatedData,
-  });
 
   // updating skills and interests
-   if (skills && skills.length > 0) {
+  if (skills && skills.length > 0) {
     // First, find or create skills
     const processedSkills = await Promise.all(
       skills.map(async (skillName) => {
@@ -132,12 +166,12 @@ export const updateProfile = async (req, res) => {
 
         // Find or create skill
         let skill = await prisma.skill.findUnique({
-          where: { name: skillName },
+          where: { name: skillName.toLowerCase() },
         });
 
         if (!skill) {
           skill = await prisma.skill.create({
-            data: { name: skillName },
+            data: { name: skillName.toLowerCase() },
           });
         }
 
@@ -146,8 +180,8 @@ export const updateProfile = async (req, res) => {
     );
 
     // Remove existing skills and add new ones
-    await prisma.profileSkill.deleteMany({ 
-      where: { profileId: profile.id } 
+    await prisma.profileSkill.deleteMany({
+      where: { profileId: profile.id }
     });
 
     await prisma.profileSkill.createMany({
@@ -168,12 +202,12 @@ export const updateProfile = async (req, res) => {
 
         // Find or create interest
         let interest = await prisma.interest.findUnique({
-          where: { name: interestName },
+          where: { name: interestName.toLowerCase() },
         });
 
         if (!interest) {
           interest = await prisma.interest.create({
-            data: { name: interestName },
+            data: { name: interestName.toLowerCase() },
           });
         }
 
@@ -182,8 +216,8 @@ export const updateProfile = async (req, res) => {
     );
 
     // Remove existing interests and add new ones
-    await prisma.profileInterest.deleteMany({ 
-      where: { profileId: profile.id } 
+    await prisma.profileInterest.deleteMany({
+      where: { profileId: profile.id }
     });
 
     await prisma.profileInterest.createMany({
