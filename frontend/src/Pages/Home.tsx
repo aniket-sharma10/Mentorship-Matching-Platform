@@ -149,9 +149,11 @@ function Home() {
           <p className="text-lg text-gray-600 mb-8">
             Join our community today and take the first step towards meaningful mentorship connections.
           </p>
+          <Link to={'/signup'} >
           <Button size="lg" className="gap-2">
             Get Started Now <ArrowRight className="h-5 w-5" />
           </Button>
+          </Link>
         </div>
       </section>
     </div>
