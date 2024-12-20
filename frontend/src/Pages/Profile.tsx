@@ -13,6 +13,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Spinner } from "flowbite-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useNavigate } from "react-router-dom";
 
 type Skill = {
   id: number | null;
@@ -26,6 +38,7 @@ type Interest = {
 
 const Profile = () => {
   const { currentUser } = useSelector((state: RootState) => state.user);
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -134,6 +147,29 @@ const Profile = () => {
     }
   };
 
+  // deleting profile
+  const handleDeleteProfile = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/profile", {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        toast.success("Profile deleted successfully");
+        // redirecting to home page after deletion
+        navigate("/");
+      } else {
+        const data = await res.json();
+        toast.error(data.msg || "Error deleting profile");
+      }
+    } catch (error) {
+      toast.error("Error deleting profile");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -162,198 +198,239 @@ const Profile = () => {
             </p>
           </div>
         </div>
-        <Button
-          variant="outline"
-          className="text-teal-500 border-teal-500"
-          onClick={() => setIsEditing((prev) => !prev)}
-        >
-          {isEditing ? "Cancel" : "Edit"}
-        </Button>
-      </div>
 
-      {isEditing ? (
-        <div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="mt-4 w-full">
-              <label className="block text-sm font-medium">Name</label>
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Enter your name"
-              />
-            </div>
+        {!isEditing && (
+          <div className="flex flex-col md:flex-row gap-2">
+            <Button
+              variant="outline"
+              className="text-teal-500 border-teal-500"
+              onClick={() => setIsEditing(true)}
+            >
+              Edit
+            </Button>
 
-            <div className="mt-4 w-full">
-              <label className="block text-sm font-medium">Bio</label>
-              <Input
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                placeholder="Enter your bio"
-              />
-            </div>
-
-            <div className="mt-4 w-full">
-              <label className="block text-sm font-medium">Role</label>
-              <Select
-                value={role}
-                onValueChange={(value: "MENTOR" | "MENTEE") => setRole(value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select your role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="MENTOR">Mentor</SelectItem>
-                  <SelectItem value="MENTEE">Mentee</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="mt-4 w-full">
-              <label className="block text-sm font-medium">New Password</label>
-              <Input
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter new Password"
-              />
-            </div>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive">Delete Profile</Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete
+                    your profile and remove all your data from our servers.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDeleteProfile}
+                    className="bg-red-500 hover:bg-red-600"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
+        )}
 
-          {/* Skills */}
-          <div className="mt-4">
-            <label className="block text-sm font-medium">Skills</label>
-            <div className="flex">
-              <Input
-                value={skillInput}
-                onChange={(e) => setSkillInput(e.target.value)}
-                placeholder="Add a skill"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleSkillAdd();
-                  }
-                }}
-              />
-              <Button onClick={handleSkillAdd} className="ml-2">
-                Add
+        {isEditing && (
+          <Button
+            variant="outline"
+            className="text-teal-500 border-teal-500"
+            onClick={() => setIsEditing(false)}
+          >
+            Cancel
+          </Button>
+        )}
+
+        </div>
+        {isEditing ? (
+          <div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="mt-4 w-full">
+                <label className="block text-sm font-medium">Name</label>
+                <Input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter your name"
+                />
+              </div>
+
+              <div className="mt-4 w-full">
+                <label className="block text-sm font-medium">Bio</label>
+                <Input
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  placeholder="Enter your bio"
+                />
+              </div>
+
+              <div className="mt-4 w-full">
+                <label className="block text-sm font-medium">Role</label>
+                <Select
+                  value={role}
+                  onValueChange={(value: "MENTOR" | "MENTEE") => setRole(value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select your role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="MENTOR">Mentor</SelectItem>
+                    <SelectItem value="MENTEE">Mentee</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="mt-4 w-full">
+                <label className="block text-sm font-medium">
+                  New Password
+                </label>
+                <Input
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter new Password"
+                />
+              </div>
+            </div>
+
+            {/* Skills */}
+            <div className="mt-4">
+              <label className="block text-sm font-medium">Skills</label>
+              <div className="flex">
+                <Input
+                  value={skillInput}
+                  onChange={(e) => setSkillInput(e.target.value)}
+                  placeholder="Add a skill"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleSkillAdd();
+                    }
+                  }}
+                />
+                <Button onClick={handleSkillAdd} className="ml-2">
+                  Add
+                </Button>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {skills.length > 0 ? (
+                  skills.map((skill, index) => (
+                    <Badge
+                      key={index}
+                      className="text-teal-500 bg-teal-100 text-base gap-2 cursor-pointer"
+                      onClick={() => {
+                        // Optional: Remove skill on click
+                        setSkills((prevSkills) =>
+                          prevSkills.filter((s) => s.name !== skill.name)
+                        );
+                      }}
+                    >
+                      {skill.name}
+                      <span className="text-gray-500">x</span>
+                    </Badge>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-500">No skills added</p>
+                )}
+              </div>
+            </div>
+
+            {/* Interest */}
+            <div className="mt-4">
+              <label className="block text-sm font-medium">Interests</label>
+              <div className="flex">
+                <Input
+                  value={interestInput}
+                  onChange={(e) => setInterestInput(e.target.value)}
+                  placeholder="Add an interest"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleInterestAdd();
+                    }
+                  }}
+                />
+                <Button onClick={handleInterestAdd} className="ml-2">
+                  Add
+                </Button>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {interests.length > 0 ? (
+                  interests.map((interest, index) => (
+                    <Badge
+                      key={index}
+                      className="text-teal-500 bg-teal-100 text-base gap-2 cursor-pointer"
+                      onClick={() => {
+                        // Optional: Remove interest on click
+                        setInterests((prevInterests) =>
+                          prevInterests.filter((i) => i.name !== interest.name)
+                        );
+                      }}
+                    >
+                      {interest.name}
+                      <span className="text-gray-500">x</span>
+                    </Badge>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-500">No interests added</p>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <Button
+                onClick={handleProfileUpdate}
+                className="text-white bg-teal-500"
+              >
+                Save Changes
               </Button>
             </div>
-            <div className="mt-2 flex flex-wrap gap-2">
+          </div>
+        ) : (
+          <div className="mt-4 px-4">
+            <p className="mt-2">
+              <strong>Bio:</strong> {bio || "No bio available."}
+            </p>
+            <p className="mt-2">
+              <strong>Role:</strong> {role === "MENTOR" ? "Mentor" : "Mentee"}
+            </p>
+            <div className="mt-4">
+              <h3 className="font-semibold">Skills:</h3>
               {skills.length > 0 ? (
-                skills.map((skill, index) => (
-                  <Badge
-                    key={index}
-                    className="text-teal-500 bg-teal-100 text-base gap-2 cursor-pointer"
-                    onClick={() => {
-                      // Optional: Remove skill on click
-                      setSkills((prevSkills) =>
-                        prevSkills.filter((s) => s.name !== skill.name)
-                      );
-                    }}
-                  >
-                    {skill.name}
-                    <span className="text-gray-500">x</span>
-                  </Badge>
-                ))
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {skills.map((skill, index) => (
+                    <Badge
+                      key={index}
+                      className="text-teal-500 bg-teal-100 text-base gap-2 cursor-pointer"
+                    >
+                      {skill.name}
+                    </Badge>
+                  ))}
+                </div>
               ) : (
                 <p className="text-sm text-gray-500">No skills added</p>
               )}
             </div>
-          </div>
-
-          {/* Interest */}
-          <div className="mt-4">
-            <label className="block text-sm font-medium">Interests</label>
-            <div className="flex">
-              <Input
-                value={interestInput}
-                onChange={(e) => setInterestInput(e.target.value)}
-                placeholder="Add an interest"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleInterestAdd();
-                  }
-                }}
-              />
-              <Button onClick={handleInterestAdd} className="ml-2">
-                Add
-              </Button>
-            </div>
-            <div className="mt-2 flex flex-wrap gap-2">
+            <div className="mt-4">
+              <h3 className="font-semibold">Interests:</h3>
               {interests.length > 0 ? (
-                interests.map((interest, index) => (
-                  <Badge
-                    key={index}
-                    className="text-teal-500 bg-teal-100 text-base gap-2 cursor-pointer"
-                    onClick={() => {
-                      // Optional: Remove interest on click
-                      setInterests((prevInterests) =>
-                        prevInterests.filter((i) => i.name !== interest.name)
-                      );
-                    }}
-                  >
-                    {interest.name}
-                    <span className="text-gray-500">x</span>
-                  </Badge>
-                ))
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {interests.map((interest, index) => (
+                    <Badge
+                      key={index}
+                      className="text-teal-500 bg-teal-100 text-base gap-2 cursor-pointer"
+                    >
+                      {interest.name}
+                    </Badge>
+                  ))}
+                </div>
               ) : (
                 <p className="text-sm text-gray-500">No interests added</p>
               )}
             </div>
           </div>
-
-          <div className="mt-6">
-            <Button
-              onClick={handleProfileUpdate}
-              className="text-white bg-teal-500"
-            >
-              Save Changes
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <div className="mt-4 px-4">
-          <p className="mt-2">
-            <strong>Bio:</strong> {bio || "No bio available."}
-          </p>
-          <p className="mt-2">
-            <strong>Role:</strong> {role === "MENTOR" ? "Mentor" : "Mentee"}
-          </p>
-          <div className="mt-4">
-            <h3 className="font-semibold">Skills:</h3>
-            {skills.length > 0 ? (
-              <div className="mt-2 flex flex-wrap gap-2">
-                {skills.map((skill, index) => (
-                  <Badge
-                    key={index}
-                    className="text-teal-500 bg-teal-100 text-base gap-2 cursor-pointer"
-                  >
-                    {skill.name}
-                  </Badge>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-gray-500">No skills added</p>
-            )}
-          </div>
-          <div className="mt-4">
-            <h3 className="font-semibold">Interests:</h3>
-            {interests.length > 0 ? (
-              <div className="mt-2 flex flex-wrap gap-2">
-                {interests.map((interest, index) => (
-                  <Badge
-                    key={index}
-                    className="text-teal-500 bg-teal-100 text-base gap-2 cursor-pointer"
-                  >
-                    {interest.name}
-                  </Badge>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-gray-500">No interests added</p>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
   );
 };
 

@@ -251,9 +251,53 @@ export const updateProfile = async (req, res) => {
 export const deleteProfile = async (req, res) => {
   const userId = req.user.id;
 
-  await prisma.profile.delete({
-    where: { userId },
+  await prisma.$transaction(async (prisma) => {
+    const profile = await prisma.profile.findUnique({
+      where: { userId },
+      include: {
+        skills: true,
+        interests: true,
+      },
+    });
+
+    if (!profile) {
+      throw new NotFoundError('Profile not found');
+    }
+
+    // delete notifications
+    await prisma.notification.deleteMany({
+      where: { userId },
+    });
+
+    // delete connections
+    await prisma.connection.deleteMany({
+      where: {
+        OR: [
+          { mentorId: userId },
+          { menteeId: userId },
+        ],
+      },
+    });
+
+    // delete profile skills and interests
+    await prisma.profileSkill.deleteMany({
+      where: { profileId: profile.id },
+    });
+
+    await prisma.profileInterest.deleteMany({
+      where: { profileId: profile.id },
+    });
+
+    // delete the profile itself
+    await prisma.profile.delete({
+      where: { userId },
+    });
+
+    // finally, delete the user from the User
+    await prisma.user.delete({
+      where: { id: userId },
+    });
   });
 
-  res.status(StatusCodes.OK).json({ msg: "Profile has been successfully deleted." });
-};
+  res.clearCookie('access_token').status(StatusCodes.OK).json({ msg: "Profile and User account has been successfully deleted." });
+}
