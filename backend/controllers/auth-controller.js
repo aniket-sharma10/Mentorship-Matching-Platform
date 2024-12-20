@@ -1,10 +1,8 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from "../db/prisma.js";
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { StatusCodes } from 'http-status-codes';
 import { BadRequestError, UnauthenticatedError } from '../errors/index.js';
-
-const prisma = new PrismaClient();
 
 // Signup logic
 export const signup = async (req, res) => {

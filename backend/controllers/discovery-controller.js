@@ -1,8 +1,6 @@
 import { StatusCodes } from "http-status-codes";
-import { PrismaClient } from '@prisma/client';
 import { BadRequestError } from "../errors/index.js";
-
-const prisma = new PrismaClient();
+import prisma from "../db/prisma.js";
 
 export const discoverUsers = async (req, res) => {
   const { role, skills, interests, page = 1, limit = 10 } = req.query;

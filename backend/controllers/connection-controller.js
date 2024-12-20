@@ -1,8 +1,7 @@
 import { StatusCodes } from "http-status-codes";
-import { PrismaClient } from "@prisma/client";
+import prisma from "../db/prisma.js"
 import { BadRequestError, NotFoundError } from "../errors/index.js";
 
-const prisma = new PrismaClient();
 
 // Send Connection Request
 export const sendRequest = async (req, res) => {

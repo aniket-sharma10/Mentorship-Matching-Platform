@@ -7,8 +7,8 @@
   "scripts": {
     "dev": "nodemon backend/index.js",
     "start": "node backend/index.js",
-    "build": "npm install && npm install --prefix frontend && npm run build --prefix frontend",
-    "prisma": "prisma generate && prisma migrate deploy"
+    "build": "npx prisma generate --schema=./backend/prisma/schema.prisma && npm install && npm install --prefix frontend && npm run build --prefix frontend",
+    "postinstall": "prisma generate --schema=./backend/prisma/schema.prisma"
   },
   "keywords": [],
   "author": "",

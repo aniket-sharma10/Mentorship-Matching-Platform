@@ -1,8 +1,6 @@
 import { StatusCodes } from "http-status-codes";
-import { PrismaClient } from '@prisma/client';
 import { NotFoundError } from "../errors/index.js";
-
-const prisma = new PrismaClient();
+import prisma from "../db/prisma.js";
 
 export const getMatches = async (req, res) => {
   const userId = req.user.id;

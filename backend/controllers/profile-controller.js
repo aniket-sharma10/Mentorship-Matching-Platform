@@ -1,9 +1,7 @@
 import { StatusCodes } from "http-status-codes";
-import { PrismaClient } from '@prisma/client';
 import bcrypt from "bcryptjs";
 import { BadRequestError, NotFoundError } from "../errors/index.js";
-
-const prisma = new PrismaClient();
+import prisma from "../db/prisma.js";
 
 // Get Profile
 export const getProfile = async (req, res) => {
