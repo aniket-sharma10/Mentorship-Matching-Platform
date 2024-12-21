@@ -262,27 +262,43 @@ export const getConnectionStatus = async (req, res) => {
   const parsedCurrentUserId = parseInt(currentUserId);
   const parsedOtherUserId = parseInt(otherUserId);
 
-  const connection = await prisma.connection.findFirst({
-    where: {
-      OR: [
-        { mentorId: parsedCurrentUserId, menteeId: parsedOtherUserId },
-        { mentorId: parsedOtherUserId, menteeId: parsedCurrentUserId },
-      ],
-    },
-  });
+  const [connection, currentUser] = await Promise.all([
+    prisma.connection.findFirst({
+      where: {
+        OR: [
+          { mentorId: parsedCurrentUserId, menteeId: parsedOtherUserId },
+          { mentorId: parsedOtherUserId, menteeId: parsedCurrentUserId },
+        ],
+      },
+      include: {
+        mentor: {
+          select: { id: true, role: true }
+        },
+        mentee: {
+          select: { id: true, role: true }
+        }
+      }
+    }),
+    prisma.user.findUnique({
+      where: { id: parsedCurrentUserId },
+      select: { role: true }
+    })
+  ]);
 
+  
   if (!connection) {
     return res.status(StatusCodes.OK).json({ status: "NONE" }); // No connection exists
   }
-
+  
   // Add who initiated the request
-  const isRequestReceiver = connection.status === "PENDING" && 
-    (connection.menteeId === parsedCurrentUserId || connection.mentorId === parsedCurrentUserId);
-
+  const isInitiator = currentUser.role === 'MENTOR' ? 
+  (connection.mentorId === parsedCurrentUserId) : 
+  (connection.menteeId === parsedCurrentUserId);
+  
   if (connection.status === "PENDING") {
     return res.status(StatusCodes.OK).json({ 
       status: "PENDING",
-      isReceiver: isRequestReceiver,
+      isReceiver: !isInitiator,
       connectionId: connection.id 
     });
   } else if (connection.status === "ACCEPTED") {
