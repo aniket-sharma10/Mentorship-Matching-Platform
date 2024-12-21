@@ -28,23 +28,19 @@ export const sendRequest = async (req, res) => {
     throw new BadRequestError("Mentors can only connect with mentees and vice versa.");
   }
 
-  // Assigning mentorId and menteeId dynamically based on roles
-  let mentorId, menteeId;
-  if (currentUser.role === "MENTOR" && requestedUser.role === "MENTEE") {
-    mentorId = currentUserId;
-    menteeId = requestedUserId;
-  } else if (currentUser.role === "MENTEE" && requestedUser.role === "MENTOR") {
-    mentorId = requestedUserId;
-    menteeId = currentUserId;
-  } else {
-    throw new BadRequestError("Invalid connection roles.");
-  }
-
   // Checking if a connection already exists
   const existingConnection = await prisma.connection.findFirst({
     where: {
-      mentorId,
-      menteeId,
+      OR: [
+        {
+          mentorId: currentUserId,
+          menteeId: requestedUserId,
+        },
+        {
+          mentorId: requestedUserId,
+          menteeId: currentUserId,
+        },
+      ],
     },
   });
 
@@ -68,18 +64,17 @@ export const sendRequest = async (req, res) => {
       });
     }
 
-
     // Prevent duplicate requests if status is PENDING or ACCEPTED
     if (existingConnection.status === "PENDING" || existingConnection.status === "ACCEPTED") {
       throw new BadRequestError("A connection request already exists.");
     }
   }
 
-
+  // Storing request sender as mentee and other user as mentor
   const connection = await prisma.connection.create({
     data: {
-      mentorId,
-      menteeId,
+      mentorId: requestedUserId,
+      menteeId: currentUserId,
       status: "PENDING",
     },
   });
@@ -262,38 +257,26 @@ export const getConnectionStatus = async (req, res) => {
   const parsedCurrentUserId = parseInt(currentUserId);
   const parsedOtherUserId = parseInt(otherUserId);
 
-  const [connection, currentUser] = await Promise.all([
-    prisma.connection.findFirst({
-      where: {
-        OR: [
-          { mentorId: parsedCurrentUserId, menteeId: parsedOtherUserId },
-          { mentorId: parsedOtherUserId, menteeId: parsedCurrentUserId },
-        ],
-      },
-      include: {
-        mentor: {
-          select: { id: true, role: true }
-        },
-        mentee: {
-          select: { id: true, role: true }
-        }
-      }
-    }),
-    prisma.user.findUnique({
-      where: { id: parsedCurrentUserId },
-      select: { role: true }
-    })
-  ]);
-
+  const currentUser = await prisma.user.findUnique({
+    where: { id: parsedCurrentUserId },
+    select: { role: true }
+  });
+  
+  const connection = await prisma.connection.findFirst({
+    where: {
+      OR: [
+        { mentorId: parsedCurrentUserId, menteeId: parsedOtherUserId },
+        { mentorId: parsedOtherUserId, menteeId: parsedCurrentUserId },
+      ],
+    },
+  });
   
   if (!connection) {
     return res.status(StatusCodes.OK).json({ status: "NONE" }); // No connection exists
   }
   
   // Add who initiated the request
-  const isReceiver = (currentUser.role === "MENTOR" && connection.menteeId === parsedCurrentUserId) || 
-  (currentUser.role === "MENTEE" && connection.mentorId === parsedCurrentUserId);
-
+  const isReceiver = connection.mentorId === parsedCurrentUserId;
   
   if (connection.status === "PENDING") {
     return res.status(StatusCodes.OK).json({ 

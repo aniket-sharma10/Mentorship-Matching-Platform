@@ -78,7 +78,7 @@ export const google = async (req, res) => {
   }
 
   // Check if the user already exists
-  const existingUser = await prisma.user.findUnique({ where: { email } });
+  const existingUser = await prisma.user.findUnique({ where: { email }, include: {profile: true} });
   
   // If the user exists, then signin
   if (existingUser) {
@@ -87,7 +87,11 @@ export const google = async (req, res) => {
     res
       .status(StatusCodes.OK)
       .cookie('access_token', token, { httpOnly: true, maxAge: 15 * 24 * 60 * 60 * 1000 })
-      .json(rest);
+      .json({
+        ...rest,
+        name: existingUser.profile?.name,
+        avatarUrl: existingUser.profile?.avatarUrl,
+      });
   } else {
     // If the user does not exist, create a new user
     const password = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
@@ -114,6 +118,10 @@ export const google = async (req, res) => {
     res
       .status(StatusCodes.OK)
       .cookie('access_token', token, { httpOnly: true, maxAge: 15 * 24 * 60 * 60 * 1000 })
-      .json(rest);
+      .json({
+        ...rest,
+        name: user.profile?.name,
+        avatarUrl: user.profile?.avatarUrl,
+      });
   }
 };
