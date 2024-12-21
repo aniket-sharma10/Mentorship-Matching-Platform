@@ -26,6 +26,7 @@ model User {
   requests             Connection[]    @relation("UserRequests")
   notifications        Notification[]
   matchingPreference   MatchingPreference?
+    @@map("user") 
 }
 
 enum Role {
@@ -43,6 +44,7 @@ model Profile {
   isComplete  Boolean  @default(false) // checks if the profile is complete
   skills      ProfileSkill[]
   interests   ProfileInterest[]
+  @@map("profile")
 }
 
 model Skill {
@@ -50,6 +52,7 @@ model Skill {
   name        String   @unique
   profiles    ProfileSkill[]
   preferences MatchingPreferenceSkill[]
+  @@map("skill")
 }
 
 model Interest {
@@ -57,6 +60,7 @@ model Interest {
   name        String   @unique
   profiles    ProfileInterest[]
   preferences MatchingPreferenceInterest[]
+  @@map("interest")
 }
 
 model ProfileSkill {
@@ -65,6 +69,7 @@ model ProfileSkill {
   profile     Profile  @relation(fields: [profileId], references: [id])
   skill       Skill    @relation(fields: [skillId], references: [id])
   @@unique([profileId, skillId])
+  @@map("profileskill")
 }
 
 model ProfileInterest {
@@ -73,6 +78,7 @@ model ProfileInterest {
   profile     Profile   @relation(fields: [profileId], references: [id])
   interest    Interest  @relation(fields: [interestId], references: [id])
   @@unique([profileId, interestId])
+  @@map("profileinterest")
 }
 
 model Connection {
@@ -84,6 +90,7 @@ model Connection {
   status      ConnectionStatus @default(PENDING)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  @@map("connection")
 }
 
 enum ConnectionStatus {
@@ -99,6 +106,7 @@ model Notification {
   type        NotificationType
   isRead      Boolean          @default(false)
   createdAt   DateTime         @default(now())
+  @@map("notification")
 }
 
 enum NotificationType {
@@ -115,6 +123,7 @@ model MatchingPreference {
   skills      MatchingPreferenceSkill[]
   interests   MatchingPreferenceInterest[]
   preferredRole Role   // Single Role: MENTOR or MENTEE
+  @@map("matchingpreference")
 }
 
 model MatchingPreferenceSkill {
@@ -123,6 +132,7 @@ model MatchingPreferenceSkill {
   matchingPreference   MatchingPreference @relation(fields: [matchingPreferenceId], references: [id])
   skill                Skill              @relation(fields: [skillId], references: [id])
   @@unique([matchingPreferenceId, skillId])
+  @@map("matchingpreferenceskill")
 }
 
 model MatchingPreferenceInterest {
@@ -131,4 +141,5 @@ model MatchingPreferenceInterest {
   matchingPreference   MatchingPreference @relation(fields: [matchingPreferenceId], references: [id])
   interest             Interest           @relation(fields: [interestId], references: [id])
   @@unique([matchingPreferenceId, interestId])
+  @@map("matchingpreferenceinterest")
 }
