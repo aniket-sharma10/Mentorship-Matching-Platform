@@ -142,6 +142,7 @@ function Discovery() {
   };
 
   const fetchConnectionStatus = async (userId: number) => {
+    setLoading(true)
     try {
       const response = await fetch(
         `/api/connection/getConnStatus?currentUserId=${currentUser?.id}&otherUserId=${userId}`
@@ -158,6 +159,8 @@ function Discovery() {
       }));
     } catch (error) {
       console.error("Error fetching connection status:", error);
+    }finally{
+      setLoading(false)
     }
   };
 
@@ -171,6 +174,7 @@ function Discovery() {
   };
 
   const sendConnectionRequest = async (requestedUserId: number) => {
+    setLoading(true)
     try {
       const response = await fetch("/api/connection/send", {
         method: "POST",
@@ -197,10 +201,13 @@ function Discovery() {
       }
     } catch (error) {
       toast.error("Error sending connection request");
+    }finally{
+      setLoading(false)
     }
   };
 
   const handleAcceptRequest = async (connectionId: number, userId: number) => {
+    setLoading(true)
     try {
       const response = await fetch("/api/connection/accept", {
         method: "PATCH",
@@ -224,10 +231,13 @@ function Discovery() {
       }
     } catch (error) {
       toast.error("Error accepting connection");
+    }finally{
+      setLoading(false)
     }
   };
 
   const handleDeclineRequest = async (connectionId: number, userId: number) => {
+    setLoading(true)
     try {
       const response = await fetch("/api/connection/decline", {
         method: "PATCH",
@@ -251,6 +261,8 @@ function Discovery() {
       }
     } catch (error) {
       toast.error("Error declining connection");
+    }finally{
+      setLoading(false)
     }
   };
 
@@ -323,7 +335,7 @@ function Discovery() {
       {/* User Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
         {users.map((user) => (
-          <Card key={user.id} className="relative group">
+          <Card key={user.id} className="relative">
             <CardContent className="p-6">
               <div className="flex items-start space-x-4 mb-4">
                 <Avatar className="w-16 h-16 flex-shrink-0">
@@ -346,7 +358,7 @@ function Discovery() {
                   {connectionStatuses[user.id]?.status === "NONE" && (
                     <Button
                       size="sm"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity bg-blue-600 hover:bg-blue-500"
+                      className="transition-opacity bg-blue-600 hover:bg-blue-500"
                       onClick={() => sendConnectionRequest(user.id)}
                     >
                       Connect
@@ -356,7 +368,7 @@ function Discovery() {
                     !connectionStatuses[user.id]?.isReceiver && (
                       <Button
                         size="sm"
-                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="transition-opacity"
                         variant="secondary"
                         disabled
                       >
@@ -365,7 +377,7 @@ function Discovery() {
                     )}
                   {connectionStatuses[user.id]?.status === "PENDING" &&
                     connectionStatuses[user.id]?.isReceiver && (
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                      <div className="transition-opacity flex gap-2">
                         <Button
                           size="sm"
                           className="bg-green-600 hover:bg-green-500"
@@ -395,7 +407,7 @@ function Discovery() {
                   {connectionStatuses[user.id]?.status === "CONNECTED" && (
                     <Button
                       size="sm"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="transition-opacity"
                       variant="secondary"
                       disabled
                     >
@@ -405,7 +417,7 @@ function Discovery() {
                   {connectionStatuses[user.id]?.status === "DECLINED" && (
                     <Button
                       size="sm"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity bg-blue-600 hover:bg-blue-500"
+                      className="transition-opacity bg-blue-600 hover:bg-blue-500"
                       onClick={() => sendConnectionRequest(user.id)}
                     >
                       Connect

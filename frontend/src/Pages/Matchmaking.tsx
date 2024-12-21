@@ -191,7 +191,7 @@ function Matchmaking() {
       {/* User Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
         {matches.map((match) => (
-          <Card key={match.user.id} className="relative group">
+          <Card key={match.user.id} className="relative">
             <CardContent className="p-6">
               <div className="flex items-start space-x-4 mb-4">
                 <Avatar className="w-16 h-16 flex-shrink-0">
@@ -212,7 +212,7 @@ function Matchmaking() {
                   {connectionStatuses[match.user.id]?.status === "NONE" && (
                     <Button
                       size="sm"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity bg-blue-600 hover:bg-blue-500"
+                      className="transition-opacity bg-blue-600 hover:bg-blue-500"
                       onClick={() => sendConnectionRequest(match.user.id)}
                     >
                       Connect
@@ -222,7 +222,7 @@ function Matchmaking() {
                     !connectionStatuses[match.user.id]?.isReceiver && (
                       <Button
                         size="sm"
-                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="transition-opacity"
                         variant="secondary"
                         disabled
                       >
@@ -231,7 +231,7 @@ function Matchmaking() {
                     )}
                   {connectionStatuses[match.user.id]?.status === "PENDING" &&
                     connectionStatuses[match.user.id]?.isReceiver && (
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                      <div className="transition-opacity flex gap-2">
                         <Button
                           size="sm"
                           className="bg-green-600 hover:bg-green-500"
@@ -261,7 +261,7 @@ function Matchmaking() {
                   {connectionStatuses[match.user.id]?.status === "CONNECTED" && (
                     <Button
                       size="sm"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="transition-opacity"
                       variant="secondary"
                       disabled
                     >
@@ -271,7 +271,7 @@ function Matchmaking() {
                   {connectionStatuses[match.user.id]?.status === "DECLINED" && (
                     <Button
                       size="sm"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity bg-blue-600 hover:bg-blue-500"
+                      className="transition-opacity bg-blue-600 hover:bg-blue-500"
                       onClick={() => sendConnectionRequest(match.user.id)}
                     >
                       Connect

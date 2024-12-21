@@ -5,7 +5,14 @@ import { toast } from "react-toastify";
 import { signOut } from "../../redux/userSlice";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 function Header() {
   const { currentUser } = useSelector((state: RootState) => state.user);
@@ -35,26 +42,45 @@ function Header() {
 
   return (
     <nav className="flex justify-between items-center px-6 py-4 bg-white border-b shadow-sm relative">
-      <Link to="/" className="text-lg sm:text-xl font-bold font-serif text-blue-600">
+      <Link
+        to="/"
+        className="text-lg sm:text-xl font-bold font-serif text-blue-600"
+      >
         MentorMatch
       </Link>
-  
+
       {/* Desktop Navigation Links */}
       <div className="hidden md:flex space-x-4">
-        <Link to="/" className={`hover:text-teal-500 text-base ${getLinkClass("/")}`}>
+        <Link
+          to="/"
+          className={`hover:text-teal-500 text-base ${getLinkClass("/")}`}
+        >
           Home
         </Link>
-        <Link to="/matchmaking" className={`hover:text-teal-500 text-base ${getLinkClass("/matchmaking")}`}>
+        <Link
+          to="/matchmaking"
+          className={`hover:text-teal-500 text-base ${getLinkClass(
+            "/matchmaking"
+          )}`}
+        >
           Matchmaking
         </Link>
-        <Link to="/discovery" className={`hover:text-teal-500 text-base ${getLinkClass("/discovery")}`}>
+        <Link
+          to="/discovery"
+          className={`hover:text-teal-500 text-base ${getLinkClass(
+            "/discovery"
+          )}`}
+        >
           Discovery
         </Link>
-        <Link to="/about" className={`hover:text-teal-500 text-base ${getLinkClass("/about")}`}>
+        <Link
+          to="/about"
+          className={`hover:text-teal-500 text-base ${getLinkClass("/about")}`}
+        >
           About Us
         </Link>
       </div>
-  
+
       {/* Hamburger Menu for Smaller Screens */}
       <div className="md:hidden flex items-center">
         <DropdownMenu>
@@ -71,7 +97,12 @@ function Header() {
                 stroke="currentColor"
                 aria-hidden="true"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
               </svg>
             </button>
           </DropdownMenuTrigger>
@@ -80,38 +111,56 @@ function Header() {
             className="w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50"
           >
             <DropdownMenuItem asChild>
-              <Link to="/" className="block px-4 py-2 text-sm hover:bg-gray-100">
+              <Link
+                to="/"
+                className="block px-4 py-2 text-sm hover:bg-gray-100"
+              >
                 Home
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link to="/matchmaking" className="block px-4 py-2 text-sm hover:bg-gray-100">
+              <Link
+                to="/matchmaking"
+                className="block px-4 py-2 text-sm hover:bg-gray-100"
+              >
                 Matchmaking
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link to="/discovery" className="block px-4 py-2 text-sm hover:bg-gray-100">
+              <Link
+                to="/discovery"
+                className="block px-4 py-2 text-sm hover:bg-gray-100"
+              >
                 Discovery
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link to="/about" className="block px-4 py-2 text-sm hover:bg-gray-100">
+              <Link
+                to="/about"
+                className="block px-4 py-2 text-sm hover:bg-gray-100"
+              >
                 About Us
               </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-  
+
       <div className="flex items-center space-x-4">
         {currentUser ? (
           <DropdownMenu>
             <DropdownMenuTrigger>
               <Avatar className="cursor-pointer">
-                <AvatarImage src={currentUser?.avatarUrl} alt={currentUser.name || "User"} />
-                <AvatarFallback>
-                  {currentUser.name?.[0]?.toUpperCase() || "U"}
-                </AvatarFallback>
+                {currentUser?.avatarUrl ? (
+                  <AvatarImage
+                    src={currentUser.avatarUrl}
+                    alt={currentUser.name || "User"}
+                  />
+                ) : (
+                  <AvatarFallback>
+                    {currentUser.name?.[0]?.toUpperCase() || "U"}
+                  </AvatarFallback>
+                )}
               </Avatar>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -127,12 +176,17 @@ function Header() {
                 <Link to="/connections">Connections</Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleSignout}>Sign Out</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleSignout}>
+                Sign Out
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
           <Link to="/signin">
-            <Button variant="outline" className="text-pink-600 border-pink-600 hover:bg-pink-50">
+            <Button
+              variant="outline"
+              className="text-pink-600 border-pink-600 hover:bg-pink-50"
+            >
               Sign In
             </Button>
           </Link>
@@ -140,7 +194,6 @@ function Header() {
       </div>
     </nav>
   );
-  
 }
 
 export default Header;
