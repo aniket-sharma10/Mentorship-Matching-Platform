@@ -291,14 +291,14 @@ export const getConnectionStatus = async (req, res) => {
   }
   
   // Add who initiated the request
-  const isInitiator = currentUser.role === 'MENTOR' ? 
-  (connection.mentorId === parsedCurrentUserId) : 
-  (connection.menteeId === parsedCurrentUserId);
+  const isReceiver = (currentUser.role === "MENTOR" && connection.menteeId === parsedCurrentUserId) || 
+  (currentUser.role === "MENTEE" && connection.mentorId === parsedCurrentUserId);
+
   
   if (connection.status === "PENDING") {
     return res.status(StatusCodes.OK).json({ 
       status: "PENDING",
-      isReceiver: !isInitiator,
+      isReceiver,
       connectionId: connection.id 
     });
   } else if (connection.status === "ACCEPTED") {
